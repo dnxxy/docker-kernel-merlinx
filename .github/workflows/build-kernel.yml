@@ -25,6 +25,9 @@ jobs:
             kernel/drivers/devfreq/helio-dvfsrc-ipi.c
           sed -i 's|#include <governor.h>|#include "governor.h"|g' \
             kernel/drivers/devfreq/helio-dvfsrc-v2/helio-dvfsrc.c 2>/dev/null || true
+          # Add include path for helio-dvfsrc-v2 to find parent devfreq headers
+          echo "ccflags-y += -I\$(srctree)/drivers/devfreq" >> \
+            kernel/drivers/devfreq/helio-dvfsrc-v2/Makefile 2>/dev/null || true
 
       - name: Install dependencies
         working-directory: .
