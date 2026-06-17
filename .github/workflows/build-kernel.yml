@@ -20,9 +20,6 @@ jobs:
           git clone --depth=1 https://github.com/Jbub5/android_kernel_xiaomi_mt6768 \
             -b kernel-tree-wip_damon+_shockwave kernel
           cp arch/arm64/configs/merlin_defconfig kernel/arch/arm64/configs/merlin_defconfig
-          # Fix Clang error: angle-bracket include for local header
-          sed -i 's/#include <helio-dvfsrc-ipi.h>/#include "helio-dvfsrc-ipi.h"/' \
-            kernel/drivers/devfreq/helio-dvfsrc-ipi.c
 
       - name: Install dependencies
         working-directory: .
@@ -30,40 +27,23 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y bc bison build-essential ccache curl flex \
             libssl-dev zip zlib1g-dev libncurses-dev python3 \
-            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
+            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi cpio
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
 
-      - name: Download Neutron Clang
-        run: |
-          mkdir -p /opt/clang
-          cd /opt/clang
-          curl -LSs "https://github.com/ZyCromerZ/Clang/releases/download/21.0.0git-20250425-release/Clang-21.0.0git-20250425.tar.gz" -o clang.tar.gz
-          tar -xzf clang.tar.gz
-          rm clang.tar.gz
-          echo "/opt/clang/bin" >> $GITHUB_PATH
-
       - name: Build kernel
         run: |
           export ARCH=arm64
-          export PATH="/opt/clang/bin:$PATH"
-          make ARCH=arm64 CC=clang LD=ld.lld \
-            AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy \
-            STRIP=llvm-strip OBJDUMP=llvm-objdump READELF=llvm-readelf \
-            CROSS_COMPILE=aarch64-linux-gnu- \
-            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-            LLVM=1 LLVM_IAS=1 -j$(nproc) \
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi- -j$(nproc) \
             merlin_defconfig
 
-          make ARCH=arm64 CC=clang LD=ld.lld \
-            AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy \
-            STRIP=llvm-strip OBJDUMP=llvm-objdump READELF=llvm-readelf \
-            CROSS_COMPILE=aarch64-linux-gnu- \
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
             CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-            LLVM=1 LLVM_IAS=1 \
             CONFIG_NO_ERROR_ON_MISMATCH=y \
-            CONFIG_THINLTO=n \
             -j$(nproc) 2>&1
 
       - name: Package AnyKernel3
