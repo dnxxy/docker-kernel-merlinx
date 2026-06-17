@@ -20,20 +20,24 @@ jobs:
           git clone --depth=1 https://github.com/Jbub5/android_kernel_xiaomi_mt6768 \
             -b kernel-tree-wip_damon+_shockwave kernel
           cp arch/arm64/configs/merlin_defconfig kernel/arch/arm64/configs/merlin_defconfig
-          # Fix MTK vendor broken angle-bracket includes where header is in same dir
-          find kernel/drivers kernel/sound -name '*.c' -exec sh -c '
-            for cfile; do
-              d=$(dirname "$cfile")
-              grep -o '"'"'#include <[^>]\+>'"'"' "$cfile" 2>/dev/null | while read -r line; do
-                hdr=$(echo "$line" | sed '"'"'s/.*<\(.*\)>.*/\1/'"'"')
-                [ -f "$d/$hdr" ] && sed -i "s|#include <$hdr>|#include \"$hdr\"|g" "$cfile"
-              done
-            done
-          ' _ {} + 2>/dev/null || true
-          # Add include path for helio-dvfsrc-v2 to find parent devfreq headers
-          mkdir -p kernel/drivers/devfreq/helio-dvfsrc-v2
-          echo "ccflags-y += -I\$(srctree)/drivers/devfreq" >> \
-            kernel/drivers/devfreq/helio-dvfsrc-v2/Makefile 2>/dev/null || true
+          # Fix angle-bracket includes in helio-dvfsrc-v2 (header in parent dir)
+          sed -i 's|#include <governor.h>|#include "governor.h"|g' \
+            kernel/drivers/devfreq/helio-dvfsrc-v2/helio-dvfsrc.c
+          sed -i 's|#include <helio-dvfsrc_v2.h>|#include "helio-dvfsrc_v2.h"|g' \
+            kernel/drivers/devfreq/helio-dvfsrc-v2/helio-dvfsrc-mt6768.c
+          sed -i 's|#include <helio-dvfsrc_v2.h>|#include "helio-dvfsrc_v2.h"|g' \
+            kernel/drivers/devfreq/helio-dvfsrc-v2/helio-dvfsrc-mt6765.c 2>/dev/null || true
+          sed -i 's|#include <helio-dvfsrc_v2.h>|#include "helio-dvfsrc_v2.h"|g' \
+            kernel/drivers/devfreq/helio-dvfsrc-v2/helio-dvfsrc-opp-mt6768.c 2>/dev/null || true
+          sed -i 's|#include <helio-dvfsrc_v2.h>|#include "helio-dvfsrc_v2.h"|g' \
+            kernel/drivers/devfreq/helio-dvfsrc-v2/helio-dvfsrc-opp-mt6765.c 2>/dev/null || true
+          sed -i 's|#include <helio-dvfsrc_v2.h>|#include "helio-dvfsrc_v2.h"|g' \
+            kernel/drivers/devfreq/helio-dvfsrc-v2/helio-dvfsrc-opp.c 2>/dev/null || true
+          sed -i 's|#include <helio-dvfsrc_v2.h>|#include "helio-dvfsrc_v2.h"|g' \
+            kernel/drivers/devfreq/helio-dvfsrc-v2/helio-dvfsrc-sysfs.c 2>/dev/null || true
+          # Add include path to parent devfreq Makefile so subdir finds headers
+          sed -i '/^ccflags-y/a ccflags-y += -I\$(srctree)/drivers/devfreq' \
+            kernel/drivers/devfreq/Makefile
 
       - name: Install dependencies
         working-directory: .
