@@ -8,10 +8,21 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: kernel
     steps:
       - uses: actions/checkout@v4
 
+      - name: Clone kernel source
+        working-directory: .
+        run: |
+          git clone --depth=1 https://github.com/Jbub5/android_kernel_xiaomi_mt6768 \
+            -b kernel-tree-wip_damon+_shockwave kernel
+          cp merlin_defconfig kernel/arch/arm64/configs/merlin_defconfig
+
       - name: Install dependencies
+        working-directory: .
         run: |
           sudo apt-get update
           sudo apt-get install -y bc bison build-essential ccache curl flex \
@@ -53,10 +64,11 @@ jobs:
             -j$(nproc) 2>&1
 
       - name: Package AnyKernel3
+        working-directory: .
         run: |
           git clone --depth=1 https://github.com/osm0sis/AnyKernel3
-          cp arch/arm64/boot/Image.gz-dtb AnyKernel3/
-          cp arch/arm64/boot/dts/mediatek/*.dtbo AnyKernel3/ 2>/dev/null || true
+          cp kernel/arch/arm64/boot/Image.gz-dtb AnyKernel3/
+          cp kernel/arch/arm64/boot/dts/mediatek/*.dtbo AnyKernel3/ 2>/dev/null || true
           cd AnyKernel3
           sed -i 's/do.devicecheck=1/do.devicecheck=0/g' anykernel.sh
           sed -i 's!BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!BLOCK=auto;!g' anykernel.sh
