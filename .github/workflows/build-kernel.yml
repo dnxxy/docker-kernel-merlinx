@@ -20,6 +20,11 @@ jobs:
           git clone --depth=1 https://github.com/Jbub5/android_kernel_xiaomi_mt6768 \
             -b kernel-tree-wip_damon+_shockwave kernel
           cp arch/arm64/configs/merlin_defconfig kernel/arch/arm64/configs/merlin_defconfig
+          # Fix MTK vendor broken includes (angle brackets for local headers)
+          sed -i 's|#include <helio-dvfsrc-ipi.h>|#include "helio-dvfsrc-ipi.h"|g' \
+            kernel/drivers/devfreq/helio-dvfsrc-ipi.c
+          sed -i 's|#include <governor.h>|#include "governor.h"|g' \
+            kernel/drivers/devfreq/helio-dvfsrc-v2/helio-dvfsrc.c 2>/dev/null || true
 
       - name: Install dependencies
         working-directory: .
