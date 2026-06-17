@@ -20,6 +20,9 @@ jobs:
           git clone --depth=1 https://github.com/Jbub5/android_kernel_xiaomi_mt6768 \
             -b kernel-tree-wip_damon+_shockwave kernel
           cp arch/arm64/configs/merlin_defconfig kernel/arch/arm64/configs/merlin_defconfig
+          # Fix Clang error: angle-bracket include for local header
+          sed -i 's/#include <helio-dvfsrc-ipi.h>/#include "helio-dvfsrc-ipi.h"/' \
+            kernel/drivers/devfreq/helio-dvfsrc-ipi.c
 
       - name: Install dependencies
         working-directory: .
