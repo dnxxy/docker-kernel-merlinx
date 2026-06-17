@@ -19,7 +19,7 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/Jbub5/android_kernel_xiaomi_mt6768 \
             -b kernel-tree-wip_damon+_shockwave kernel
-          cp merlin_defconfig kernel/arch/arm64/configs/merlin_defconfig
+          cp arch/arm64/configs/merlin_defconfig kernel/arch/arm64/configs/merlin_defconfig
 
       - name: Install dependencies
         working-directory: .
